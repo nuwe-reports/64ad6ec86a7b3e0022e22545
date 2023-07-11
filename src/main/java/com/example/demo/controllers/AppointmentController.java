@@ -10,6 +10,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,18 +47,23 @@ public class AppointmentController {
         if (appointment.isPresent()){
             return new ResponseEntity<>(appointment.get(),HttpStatus.OK);
         }else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        	return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
     @PostMapping("/appointment")
     public ResponseEntity<List<Appointment>> createAppointment(@RequestBody Appointment appointment){
-        /** TODO 
-         * Implement this function, which acts as the POST /api/appointment endpoint.
-         * Make sure to check out the whole project. Specially the Appointment.java class
-         */
-        return new ResponseEntity<>(HttpStatus.I_AM_A_TEAPOT);
-    }
+    	if(!appointment.getStartsAt().equals(appointment.getFinishesAt())) {
+    		if(!appointmentRepository.findAll().stream().anyMatch(o -> o.overlaps(appointment))){
+    			appointmentRepository.save(appointment);
+    			return new ResponseEntity<>(HttpStatus.OK);
+    		}
+    		else
+    			return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+    		}
+    		else
+    			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    	}
 
 
     @DeleteMapping("/appointments/{id}")
